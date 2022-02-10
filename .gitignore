@@ -1,5 +1,7 @@
 # Other
-/data
+/data/
+/AstroAugmentations/data/
+*.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
