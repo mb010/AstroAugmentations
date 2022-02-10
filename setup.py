@@ -8,8 +8,8 @@ setuptools.setup(
     author='Micah Bowles',
     author_email='micah.bowles@postgrad.manchester.ac.uk',
     license='MIT License',
-    package_dir={"": "AstroAugmentations"},
-    packages=setuptools.find_packages(where="AstroAugmentations"),
+    package_dir={"": "astroaugmentations"},
+    packages=setuptools.find_packages(where="astroaugmentations"),
     install_requires=[
         'albumentations>=1.1.0',
         'numpy',
@@ -18,12 +18,8 @@ setuptools.setup(
         'scikit-image>=0.18.3',
         'scikit-learn>=1.0.2',
         'scipy>=1.7.3 '
-        #'torch>=1.10.2+cu113',
-        #'torchvision>=0.11.3+cu113'
-    ],
-    # torch and torchvision are also required!
-    # Which version you install depends on your system: https://pytorch.org/
 
+    ],
     classifiers=[
         'Development Status :: 1 - Planning',
         'Intended Audience :: Science/Research',
