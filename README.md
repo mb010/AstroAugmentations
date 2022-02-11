@@ -90,5 +90,5 @@ AstroAugmentations
 # Citation
 Relevant publication in prep. Please reach out to the author for updates.
 # Contact
-For questions please contact: micah.bowles@postgrad.manchester.ac.uk
+For questions please contact: micah.bowles@postgrad.manchester.ac.uk \
 For bugs or any issues with implementing this package, please open an [issue](https://github.com/mb010/AstroAugmentations/issues).
