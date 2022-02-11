@@ -8,33 +8,30 @@ This should allow scalability and applicability in a multitude of cases,
 including both TensorFlow and PyTorch.
 
 # Features
-- Augmentations designed around specific astronomical domains and data formats
+- Augmentations designed for specific astronomical domains and data formats.
 - Access to standardized default data sets.
-- This early version (only) covers:
-  - Radio images (designed with interferometers in mind)
+- Most recent version covers:
+  - Radio image augmentations (designed with interferometers in mind)
 
 # Installation
-**Install**: `pip install AstroAugmentations`\
-**Suggested Import**: `import astroaugmentations as AA`.
+**Install**:\
+`pip install AstroAugmentations`\
 
-:warning: **Import will fail in v0.1.0 if torch and torchvision are not installed!**
-Which version you install depends on your system.
+**Import format**:\
+`import astroaugmentations as AA`.
+
+:warning: **v0.1.0 requires torch and torchvision which are not autmatically installed!**
+The version you install depends on your system.
 Please see the official [PyTorch](https://pytorch.org/) site to download
-an appropriate configuration.
-(Developed using: `torch>=1.10.2+cu113` and `'torchvision>=0.11.3+cu113`).
-These are currently used in the example datasets.
+an appropriate configuration. These are currently used in the example datasets.\
+Developed using: `torch>=1.10.2+cu113` and `'torchvision>=0.11.3+cu113`.
 
 # Usage
-Example augmentations for all modalities and domains supported are provided within the `AA.AstroAugmentations()` class in [this file](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/augmentations.py).
+Augmentations for all modalities and domains supported are provided within the `AA.AstroAugmentations()` class in [this file](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/augmentations.py).
 
-`AA.CustomKernelConvolution()` requires a kernel to be available in a directory as a saved numpy array (e.g. `./kernels/FIRST_kernel.npy`). We provide a kernel we generated for the
-[FIRST Survey](http://sundog.stsci.edu/)
-[here](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/kernels).
-
-## Data Sets
-Data sets are called using the scripts provided in
-[astroaugmentations/datasets](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/datasets).
-Please see the `*.ipynb` notebooks for demonstrations on how best to use these.
+`AA.CustomKernelConvolution()` requires a kernel to be available in a directory as a saved numpy array (e.g. `./kernels/FIRST_kernel.npy`). We provide a kernel we generated
+[here](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/kernels)
+(designed for the [FIRST Survey](http://sundog.stsci.edu/)).
 
 # Demo / Examples
 Please see the ipython notebooks provided for demonstrations of the
@@ -42,6 +39,33 @@ various augmentations. These are implemented using Torch.
 The interaction with the Albumentations package should allow for
 AstroAugmentations to be applied to other frameworks.
 See examples of their implementations [here](https://albumentations.ai/docs/examples/).
+
+# Using the in-built datasets
+Data sets are called using the scripts provided in
+[astroaugmentations/datasets](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/datasets).
+See use examples in the demonstration ipython notebooks.
+
+# Adapting Data Loaders (PyTorch)
+Following Albumentions notation, we adapt respective torch data loaders from a functional call to an Albumnetations call as shown in their [PyTorch Example](https://albumentations.ai/docs/examples/pytorch_semantic_segmentation/#Define-a-PyTorch-dataset-class) which allows respective transformations to be applied simultaneously to segmentation masks. We present an example of what this can look like.
+
+Assuming there is a `self.transform` attribute as a parameter in our data class. In which case, normally inside the `__getitem__` method, a conditional application of the transform is made:
+```
+if self.transform is not None:
+    image = self.transform(image)
+```
+For Albumentations, and thus our package, we need to adapt this notation. In the case of image augmentations (no mask augmentations) we write:
+```
+if self.transform is not None:
+    image = self.transform(image=image)["image"]
+```
+This seems unnecessary, until we consider an example of what happens when we try to apply our transformations to masks as well as the input:
+```
+if self.transform is not None:
+    transformed = self.transform(image=image, mask=mask)
+    image = transformed["image"]
+    mask = transformed["mask"]
+```
+
 
 # Package Structure:
 ```
@@ -64,5 +88,7 @@ AstroAugmentations
 ```
 
 # Citation
-Relevant publication in prep. Please reach out to the author for details:\
-micah.bowles@postgrad.manchester.ac.uk
+Relevant publication in prep. Please reach out to the author for updates.
+# Contact
+For questions please contact: micah.bowles@postgrad.manchester.ac.uk
+For bugs or any issues with implementing this package, please open an [issue](https://github.com/mb010/AstroAugmentations/issues).
