@@ -1,7 +1,7 @@
-from __future__ import absolute_import
-
 from .augmentations import *
-from .datasets import *
-from .utils import *
-#from .datasets import datasets as datasets
-#from .utils import utils as utils
+from . import datasets
+from . import utils
+
+__credits__ = "The Manchester University; The Alan Turing Institute"
+__version__ = "0.1.0"
+__author__ = "Micah Bowles"

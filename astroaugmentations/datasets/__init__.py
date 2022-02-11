@@ -1,2 +1,2 @@
-import .galaxy_mnist as galaxy_mnist
-import .MiraBest_F as MiraBest
+from . import galaxy_mnist
+from . import MiraBest_F
