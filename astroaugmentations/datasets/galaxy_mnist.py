@@ -60,13 +60,13 @@ class GalaxyMNIST(MNIST):
             """
         )
 
-    
+
     def _load_data(self):
         """
-        Reads the extracted {train/test}_dataset.hdf5. 
-        Each hdf5 includes both the images and labels - see read_dataset_file. 
+        Reads the extracted {train/test}_dataset.hdf5.
+        Each hdf5 includes both the images and labels - see read_dataset_file.
         This defines the canonical dataset (MNIST-style, as a standard reference)
-        To make your own tweaks (e.g. set a different train-test split, use ``load_custom_data``)       
+        To make your own tweaks (e.g. set a different train-test split, use ``load_custom_data``)
 
         Returns:
             images: torch uint8 tensor like NCHW, 8000 train images or 2000 test images
@@ -94,10 +94,10 @@ class GalaxyMNIST(MNIST):
         img = Image.fromarray(img.numpy(), mode='RGB')
 
         if self.transform is not None:
-            img = self.transform(img)
+            img = self.transform(image=img)['image']
 
         if self.target_transform is not None:
-            target = self.target_transform(target)
+            target = self.target_transform(image=target)['image']
 
         return img, target
 
@@ -139,7 +139,7 @@ class GalaxyMNIST(MNIST):
             train_images, train_labels, test_images, test_labels = all_images[train_indices], all_labels[train_indices], all_images[test_indices], all_labels[test_indices]
         else:
             train_images, train_labels, test_images, test_labels = model_selection.train_test_split(all_images, all_labels, test_size=test_size)
-        
+
 
         if self.train:
             self.data, self.targets = (train_images, train_labels)

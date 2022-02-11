@@ -155,7 +155,7 @@ class MiraBest_F(data.Dataset):
             img = self.transform(image=img)['image']
 
         if self.target_transform is not None:
-            target = self.target_transform(target)
+            target = self.target_transform(image=target)['image']
 
         #img = Image.fromarray(img,mode='L') ## Why would this be helpful? Just return it as a torch array.
         return img, target
