@@ -273,9 +273,19 @@ class CustomKernelConvolution():
             Kernel value above which to set kernel values to 1.
         psf_radius (float):
             Radius of psf centre to clip out. Default=None; FIRST=2.4 (resolution in arcsec).
+        sidelobe_scaling (float):
+            Factor to upweight sidelobes by, default: 1.
+        mode (str):
+            How to manage the kernel interacting with existing signal. Default: 'sum'. 
+            Options: 
+                'sum': Adds original image back onto convolved image.
+                'masked': Masks non-zeros in convolved image 
+                    before adding back in kernel (can create sharp edges).
+                'delta': Adds a delta function to centre of kernel 
+                    (can create signifcant artifacts from non-smooth kernel).
     """
     def __init__(self, kernel, rfi_dropout=None, rfi_dropout_p=1, beam_cut=None,
-                 psf_radius=None, sidelobe_scaling=1, show_kernel=False, mode='masked'):
+                 psf_radius=None, sidelobe_scaling=1, show_kernel=False, mode='sum'):
         self.mode = mode
         assert self.mode in ["masked", "sum", "delta"]
         self.kernel = kernel
