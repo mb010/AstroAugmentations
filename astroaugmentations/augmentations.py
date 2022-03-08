@@ -101,8 +101,8 @@ class AstroAugmentations():
                 width=85, height=85,
                 p=1),
             A.Lambda(
-                name='Dirty beam convlolution',
-                image=Normalize(mean=0.5, std=0.5),
+                name='Min-Max Normalize',
+                image=MinMaxNormalize(mean=0.5, std=0.5),
                 always_apply=True)
         ]
         if self.aug_no is not None:
@@ -116,13 +116,14 @@ class AstroAugmentations():
         return A.Compose([])
 
 
-class Normalize():
+class MinMaxNormalize():
     def __init__(self, mean=0.5, std=0.25):
         self.mean = mean
         self.std = std
     def __call__(self, image, **kwargs):
         transformed = image-image.min()
-        transformed = transformed/transformed.max()
+        max = 1. if transformed.max() == 0 else transformed.max()
+        transformed = transformed/max
         transformed = transformed-self.mean
         transformed = transformed/self.std
         return transformed
