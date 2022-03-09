@@ -225,7 +225,8 @@ class BrightnessGradient():
     def __call__(self, image, **kwargs):
         if self.primary_beam:
             augmented_image = self.primary_beam_analogy(image)
-            return augmented_image/augmented_image.max()
+            max = 1. if augmented_image.max() == 0 else augmented_image.max()
+            return augmented_image/max
         else:
             augmented_image = self.gradient(image)
             return augmented_image
@@ -236,7 +237,8 @@ class BrightnessGradient():
         normal = np.random.rand(2)*2-1
         scaling = (normal[0]*grid[0] - normal[1]*grid[1])
         scaling = scaling-scaling.min()+limits[0]
-        transformed_image = image*scaling/scaling.max()*limits[1]
+        max = 1. if scaling.max() == 0 else scaling.max()
+        transformed_image = image*scaling/max*limits[1]
 
         return transformed_image
 
@@ -326,7 +328,8 @@ class CustomKernelConvolution():
 
         # Convolved image
         convolved_image = np.fft.fftshift(np.fft.ifft2(ft_img*ft_kernel))
-        convolved_image = (np.abs(convolved_image)-np.abs(convolved_image).min())/np.abs(convolved_image).max()
+        max = 1. if np.abs(convolved_image).max()==0 else np.abs(convolved_image).max()
+        convolved_image = (np.abs(convolved_image)-np.abs(convolved_image).min())/max
 
         # Add back in original signal
         if self.mode=="masked":
