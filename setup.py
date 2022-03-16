@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
     name='AstroAugmentations',
     version='0.1.0',
-    description='Augmentations for astronomical data sets',
+    description='Augmentations for astronomical data sets.',
     url='https://github.com/mb010/AstroAugmentations',
     project_urls={
         "Bug Tracker": "https://github.com/mb010/AstroAugmentations/issues",
@@ -19,12 +19,7 @@ setuptools.setup(
     ],
     install_requires=[
         'albumentations>=1.1.0',
-        'numpy',
-        'h5py>=3.6.0',
-        'Pillow>=9.0.0',
-        'scikit-image>=0.18.3',
-        'scikit-learn>=1.0.2',
-        'scipy>=1.7.3 '
+        'h5py'
     ],
     classifiers=[
         'Development Status :: 1 - Planning',

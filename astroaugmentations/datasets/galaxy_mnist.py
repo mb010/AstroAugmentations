@@ -90,9 +90,8 @@ class GalaxyMNIST(MNIST):
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
-
-        img = Image.fromarray(img.numpy(), mode='RGB')
-
+        img = img.numpy().transpose(1,2,0)
+        #image = np.array(read_image(img_path), dtype=np.float64).transpose(1,2,0)
         if self.transform is not None:
             img = self.transform(image=img)['image']
 
