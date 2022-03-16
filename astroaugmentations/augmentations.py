@@ -2,8 +2,12 @@ import numpy as np
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from skimage.segmentation import slic
+import cv2
 
-class AstroAugmentations():
+cv2.setNumThreads(0)
+cv2.ocl.setUseOpenCL(False)
+
+class ComposedAugmentations():
     """Return augmentation object designed for a
     specific regime & data type within astronomy.
     Args:
@@ -44,7 +48,18 @@ class AstroAugmentations():
         return transformation
 
     def optical(self):
-        return A.Compose([])
+        augmentations = [
+            #
+            #A.Lambda(
+            #    name="",
+            #    image=(
+
+            #    ),
+            #    p=self.p),
+        ]
+        #augmentations = self._tensor_check(augmentations)
+        #augmentation = A.Compose(augmentations)
+        return augmentations
 
     def radio(self):
         augmentations = [
@@ -60,7 +75,7 @@ class AstroAugmentations():
                 image=BrightnessGradient(limits=(0.,1.)),
                 p=self.p), # No noise
             A.ElasticTransform( # Elastically transform the source
-                sigma=100, alpha_affine=25, interpolation=1,
+                alpha=1, sigma=100, alpha_affine=25, interpolation=1,
                 border_mode=1, value=0,
                 p=self.p),
             A.ShiftScaleRotate(
@@ -107,13 +122,19 @@ class AstroAugmentations():
         ]
         if self.aug_no is not None:
             augmentations = augmentations[:self.aug_no]
-        if self.tensor_out:
-            augmentations.append(ToTensorV2())
+        augmentations = self._tensor_check(augmentations)
         augmentation = A.Compose(augmentations)
         return augmentation
 
     def default():
         return A.Compose([])
+
+    def _tensor_check(self, augmentations: list):
+        if self.tensor_out:
+            augmentations.append(ToTensorV2())
+            return augmentations
+        else:
+            return augmentations
 
 
 class MinMaxNormalize():
@@ -203,8 +224,9 @@ class BrightnessGradient():
     """Randomly applies a linear gradient to the brightness of the image.
     Args:
         limits (tuple):
-            Upper and lower bound for uniform random selection of
-            brightness scaling limits of the applied gradient.
+            Range to sample the lowest gradient from (peak is always 1).
+            The plane is adjusted to make the minimum value of the plane
+            equal the sampled value within the limits range. Default: [0.0,1.0]
         primary_beam (bool):
             Whether or not to emulate an incorrectly corrected primary beam.
         noise (float):
@@ -213,14 +235,14 @@ class BrightnessGradient():
         seed (float):
             Seed used for random numpy values.
     """
-    def __init__(self, limits=(0.5,1), primary_beam:bool=False, seed=None, noise=0.2):
+    def __init__(self, limits=[0.0, 1.], primary_beam:bool=False, seed=None, noise=0.2):
         self.seed = seed
         if self.seed is not None:
             np.random.RandomState.seed = self.seed
         self.noise = noise
         self.primary_beam = primary_beam
         self.limits = np.asarray(limits)
-
+        self.rng = np.random.default_rng()
 
     def __call__(self, image, **kwargs):
         if self.primary_beam:
@@ -232,13 +254,22 @@ class BrightnessGradient():
             return augmented_image
 
     def gradient(self, image):
-        limits = self.limits[0] + np.diff(self.limits)[0]*np.sort(np.random.rand(2))
+
+
+        limit = self.rng.uniform(*self.limits, 1) # single random value in range of limits
+        image_scaled = limit*image.copy() # scale image to sampled value
+
         grid = np.mgrid[0:image.shape[0], 0:image.shape[1]]
-        normal = np.random.rand(2)*2-1
+        normal = self.rng.uniform(-1,1, 2)
+
         scaling = (normal[0]*grid[0] - normal[1]*grid[1])
-        scaling = scaling-scaling.min()+limits[0]
+        scaling = scaling-scaling.min()+limit
         max = 1. if scaling.max() == 0 else scaling.max()
-        transformed_image = image*scaling/max*limits[1]
+        if len(image.shape) == 3:
+            scaling = np.broadcast_to(scaling[:,:,np.newaxis], image.shape)
+        transformed_image = image*scaling/max*self.limits[1]
+        if image.dtype.name == 'uint8':
+            transformed_image = transformed_image.astype(np.uint8)
 
         return transformed_image
 
@@ -279,12 +310,12 @@ class CustomKernelConvolution():
         sidelobe_scaling (float):
             Factor to upweight sidelobes by, default: 1.
         mode (str):
-            How to manage the kernel interacting with existing signal. Default: 'sum'. 
-            Options: 
+            How to manage the kernel interacting with existing signal. Default: 'sum'.
+            Options:
                 'sum': Adds original image back onto convolved image.
-                'masked': Masks non-zeros in convolved image 
+                'masked': Masks non-zeros in convolved image
                     before adding back in kernel (can create sharp edges).
-                'delta': Adds a delta function to centre of kernel 
+                'delta': Adds a delta function to centre of kernel
                     (can create signifcant artifacts from non-smooth kernel).
     """
     def __init__(self, kernel, rfi_dropout=None, rfi_dropout_p=1, beam_cut=None,
@@ -348,3 +379,17 @@ class CustomKernelConvolution():
         rr = np.sqrt(xx**2+yy**2)
         kernel = np.where(rr<=self.psf_radius, 0, kernel)
         return kernel
+
+class ToGray():
+    """Makes a color image gray scale.
+        Args:
+            reduce_channels (bool):
+                Decides if output has one channel (True) or three channels (False). Default: False
+    """
+    def __init__(self, reduce_channels=False):
+        if reduce_channels:
+            self.mean = lambda arr: arr.mean(axis=2, keepdims=True)
+        else:
+            self.mean = lambda arr: arr.mean(axis=2, keepdims=True).repeat(3, axis=2)
+    def __call__(self, image, **kwargs):
+        return self.mean(image)
