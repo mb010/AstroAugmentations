@@ -1,7 +1,8 @@
 # Other
 /data/
 /AstroAugmentations/data/
-*.ipynb
+optical_exploration.ipynb
+radio_exploration.ipynb
 /venv*
 
 # Byte-compiled / optimized / DLL files
