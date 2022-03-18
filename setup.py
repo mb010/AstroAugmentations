@@ -15,11 +15,12 @@ setuptools.setup(
     packages=[
         "astroaugmentations",
         "astroaugmentations.datasets",
-        "astroaugmentations.utils"
+        "astroaugmentations.utils",
+        "astroaugmentations.image_domain"
     ],
     install_requires=[
-        'albumentations>=1.1.0',
-        'h5py'
+        'h5py',
+        'astropy'
     ],
     classifiers=[
         'Development Status :: 1 - Planning',
