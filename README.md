@@ -15,18 +15,14 @@ including both TensorFlow and PyTorch.
 - Most recent version covers:
   - Radio image augmentations (designed with interferometers in mind)
 
-# Installation
-**Install**:
+# Quick Start
+**Importing**: `import astroaugmentations as AA`.
 
+**Install**:
 ```python
 pip install -U git+https://github.com/mb010/AstroAugmentations.git
 pip install -U git+https://github.com/albumentations-team/albumentations
 ```
-
-**Importing**:
-
-`import astroaugmentations as AA`.
-
 :warning: **Currently requires torch and torchvision which are not autmatically installed!**
 The version you install depends on your system.
 Please see the official [PyTorch](https://pytorch.org/) site to download
@@ -34,6 +30,8 @@ an appropriate configuration. These are currently used in the example datasets.\
 Developed using: `torch>=1.10.2+cu113` and `'torchvision>=0.11.3+cu113`.
 
 # Usage
+
+The default is to import the package as `AA`: `import astroaugmentations as AA`.
 Augmentations for each data type are seperated into individual modules, 
 each of which will contain submodules with regime specific augmentations e.g.:
 - `AA.image_domain` contains transformations designed for imaging / computer vision tasks.
