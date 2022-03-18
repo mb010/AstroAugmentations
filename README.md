@@ -3,6 +3,8 @@ Custom image augmentations specifically designed around astronomical
 instruments and data. Please open an
 [issue](https://github.com/mb010/AstroAugmentations/issues) to highlight missing augmentations and / or datasets. This is an open source project, so feel free to fork, make changes and submit a [pull request](https://github.com/mb010/AstroAugmentations/pulls) of your additions and modifications!
 
+This package is in active development and although it should work, it may be a bit temporamental and require some love to get to know. Feel free to make suggestions using the [issue](https://github.com/mb010/AstroAugmentations/issues) tracker.
+
 This package is based on [Albumentations](https://github.com/albumentations-team/albumentations/).
 This should allow scalability and applicability in a multitude of cases,
 including both TensorFlow and PyTorch.
@@ -14,22 +16,36 @@ including both TensorFlow and PyTorch.
   - Radio image augmentations (designed with interferometers in mind)
 
 # Installation
-**Install**:\
-`pip install AstroAugmentations`\
+**Install**:
 
-**Import format**:\
+```python
+pip install -U git+https://github.com/mb010/AstroAugmentations.git
+pip install -U git+https://github.com/albumentations-team/albumentations
+```
+
+**Importing**:
+
 `import astroaugmentations as AA`.
 
-:warning: **v0.1.0 requires torch and torchvision which are not autmatically installed!**
+:warning: **Currently requires torch and torchvision which are not autmatically installed!**
 The version you install depends on your system.
 Please see the official [PyTorch](https://pytorch.org/) site to download
 an appropriate configuration. These are currently used in the example datasets.\
 Developed using: `torch>=1.10.2+cu113` and `'torchvision>=0.11.3+cu113`.
 
 # Usage
-Augmentations for all modalities and domains supported are provided within the `AA.AstroAugmentations()` class in [this file](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/augmentations.py).
+Augmentations for each data type are seperated into individual modules, 
+each of which will contain submodules with regime specific augmentations e.g.:
+- `AA.image_domain` contains transformations designed for imaging / computer vision tasks.
+  - `AA.image_domain.optical` provides augmentations specifically designed around [optical imaging](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/image_domain/optical.py).
+  - `AA.image_domain.radio` provides augmentations specifically designed around [radio imaging](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/image_domain/radio.py).
 
-`AA.CustomKernelConvolution()` requires a kernel to be available in a directory as a saved numpy array (e.g. `./kernels/FIRST_kernel.npy`). We provide a kernel we generated
+`AA.composed` contains 'ready to go' 
+[example compositions](https://github.com/mb010/AstroAugmentations/blob/main/astroaugmentations/composed.py) 
+of multiple transforms explicitly designed for a data type and regime.
+
+`AA.CustomKernelConvolution()` requires a kernel to be available in a directory as 
+a saved numpy array (e.g. `./kernels/FIRST_kernel.npy`). We provide a kernel we generated
 [here](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/kernels)
 (designed for the [FIRST Survey](http://sundog.stsci.edu/)).
 
@@ -41,7 +57,7 @@ AstroAugmentations to be applied to other frameworks.
 See examples of their implementations [here](https://albumentations.ai/docs/examples/).
 
 # Using the in-built datasets
-Data sets are called using the scripts provided in
+Data sets are provided in
 [astroaugmentations/datasets](https://github.com/mb010/AstroAugmentations/tree/main/astroaugmentations/datasets).
 See use examples in the demonstration ipython notebooks.
 
@@ -73,7 +89,10 @@ AstroAugmentations
 ├── LICENSE
 ├── astroaugmentations
 │   ├── __init__.py
-│   ├── augmentations.py
+│   ├── image_domain
+│   │   ├── general.py
+│   │   ├── optical.py
+│   │   └── radio.py
 │   ├── utils
 │   │   ├── __init__.py
 │   │   ├── VLA_raw_antenna_position.py
@@ -82,13 +101,14 @@ AstroAugmentations
 │   │   ├── __init__.py
 │   │   ├── galaxy_mnist.py
 │   │   └── MiraBest_F.py
-│   └── module_numpy_2.py
+│   └── composed.py
 ├── README.md
 └── setup.py
 ```
 
 # Citation
 Relevant publication in prep. Please reach out to the author for updates.
+
 # Contact
 For questions please contact: micah.bowles@postgrad.manchester.ac.uk \
 For bugs or any issues with implementing this package, please open an [issue](https://github.com/mb010/AstroAugmentations/issues).
