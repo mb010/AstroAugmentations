@@ -74,7 +74,7 @@ class MiraBest_F(data.Dataset):
         self.transform = transform
         self.target_transform = target_transform
         self.train = train  # training set or test set
-        self.aa = albumentations
+        self.aug_type = aug_type
 
         if download:
             self.download()
@@ -182,7 +182,6 @@ class MiraBest_F(data.Dataset):
                 f"{self.aug_type} not implemented. Currently 'aug_type' must be either 'albumentations' which defaults to Albumentations or 'torchvision' to be functional."
             )
 
-        # img = Image.fromarray(img,mode='L') ## Why would this be helpful? Just return it as a torch array.
         return img, target
 
     def __len__(self):
