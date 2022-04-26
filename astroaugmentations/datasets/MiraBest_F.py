@@ -67,7 +67,7 @@ class MiraBest_F(data.Dataset):
         target_transform=None,
         download=False,
         test_size=None,
-        albumentations=True,
+        aug_type="albumentations",
     ):
 
         self.root = os.path.expanduser(root)
@@ -163,20 +163,24 @@ class MiraBest_F(data.Dataset):
         # to return a PIL Image
         img = np.reshape(img, (150, 150))
 
-        if self.aa:
+        if self.aug_type == "albumentations":
             if self.transform is not None:
                 img = self.transform(image=img)["image"]
 
             if self.target_transform is not None:
                 target = self.target_transform(image=target)["image"]
 
-        else:
+        elif self.aug_type == "torchvision":
             img = Image.fromarray(img, mode="L")
             if self.transform is not None:
                 img = self.transform(img)
 
             if self.target_transform is not None:
                 target = self.target_transform(target)
+        else:
+            raise NotImplementedError(
+                f"{self.aug_type} not implemented. Currently 'aug_type' must be either 'albumentations' which defaults to Albumentations or 'torchvision' to be functional."
+            )
 
         # img = Image.fromarray(img,mode='L') ## Why would this be helpful? Just return it as a torch array.
         return img, target
