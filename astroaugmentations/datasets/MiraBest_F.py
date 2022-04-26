@@ -1,6 +1,7 @@
 import os.path
 import numpy as np
 import sys
+
 if sys.version_info[0] == 2:
     import cPickle as pickle
 else:
@@ -33,47 +34,56 @@ class MiraBest_F(data.Dataset):
             standard MiraBest data set.
     """
 
-    base_folder = 'F_batches'
-    url = "http://www.jb.man.ac.uk/research/MiraBest/MiraBest_F/MiraBest_F_batches.tar.gz"
+    base_folder = "F_batches"
+    url = (
+        "http://www.jb.man.ac.uk/research/MiraBest/MiraBest_F/MiraBest_F_batches.tar.gz"
+    )
     filename = "MiraBest_F_batches.tar.gz"
-    tgz_md5 = '7d4e3a623d29db7204bce81676ee8ce2'
+    tgz_md5 = "7d4e3a623d29db7204bce81676ee8ce2"
     train_list = [
-                  ['data_batch_1', 'f7a470b7367e8e0d0c5093d2cf266d54'],
-                  ['data_batch_2', 'bb65ecd7e748e9fb789419b1efbf1bab'],
-                  ['data_batch_3', '32de1078e7cd47f5338c666a1b563ede'],
-                  ['data_batch_4', 'a1209aceedd8806c88eab27ce45ee2c4'],
-                  ['data_batch_5', '1619cd7c54f5d71fcf4cfefea829728e'],
-                  ['data_batch_6', '636c2b84649286e19bcb0684fc9fbb01'],
-                  ['data_batch_7', 'bc67bc37080dc4df880ffe9720d680a8'],
-                  ]
+        ["data_batch_1", "f7a470b7367e8e0d0c5093d2cf266d54"],
+        ["data_batch_2", "bb65ecd7e748e9fb789419b1efbf1bab"],
+        ["data_batch_3", "32de1078e7cd47f5338c666a1b563ede"],
+        ["data_batch_4", "a1209aceedd8806c88eab27ce45ee2c4"],
+        ["data_batch_5", "1619cd7c54f5d71fcf4cfefea829728e"],
+        ["data_batch_6", "636c2b84649286e19bcb0684fc9fbb01"],
+        ["data_batch_7", "bc67bc37080dc4df880ffe9720d680a8"],
+    ]
 
     test_list = [
-                 ['test_batch', 'ac7ea0d5ee8c7ab49f257c9964796953'],
-                 ]
+        ["test_batch", "ac7ea0d5ee8c7ab49f257c9964796953"],
+    ]
     meta = {
-                'filename': 'batches.meta',
-                'key': 'label_names',
-                'md5': 'e1b5450577209e583bc43fbf8e851965',
-                }
+        "filename": "batches.meta",
+        "key": "label_names",
+        "md5": "e1b5450577209e583bc43fbf8e851965",
+    }
 
-
-    def __init__(self, root, train=True,
-                 transform=None, target_transform=None,
-                 download=False,
-                 test_size=None
-                ):
+    def __init__(
+        self,
+        root,
+        train=True,
+        transform=None,
+        target_transform=None,
+        download=False,
+        test_size=None,
+        aug_type="albumentations",
+    ):
 
         self.root = os.path.expanduser(root)
         self.transform = transform
         self.target_transform = target_transform
         self.train = train  # training set or test set
+        self.aug_type = aug_type
 
         if download:
             self.download()
 
         if not self._check_integrity():
-            raise RuntimeError('Dataset not found or corrupted.' +
-                               ' You can use download=True to download it')
+            raise RuntimeError(
+                "Dataset not found or corrupted."
+                + " You can use download=True to download it"
+            )
 
         if self.train and test_size is None:
             downloaded_list = self.train_list
@@ -90,20 +100,19 @@ class MiraBest_F(data.Dataset):
         for file_name, checksum in downloaded_list:
             file_path = os.path.join(self.root, self.base_folder, file_name)
 
-            with open(file_path, 'rb') as f:
+            with open(file_path, "rb") as f:
                 if sys.version_info[0] == 2:
                     entry = pickle.load(f)
                 else:
-                    entry = pickle.load(f, encoding='latin1')
+                    entry = pickle.load(f, encoding="latin1")
 
-                self.data.append(entry['data'])
-                if 'labels' in entry:
-                    self.targets.extend(entry['labels'])
-                    self.filenames.extend(entry['filenames'])
+                self.data.append(entry["data"])
+                if "labels" in entry:
+                    self.targets.extend(entry["labels"])
+                    self.filenames.extend(entry["filenames"])
                 else:
-                    self.targets.extend(entry['fine_labels'])
-                    self.filenames.extend(entry['filenames'])
-
+                    self.targets.extend(entry["fine_labels"])
+                    self.filenames.extend(entry["filenames"])
 
         self.data = np.vstack(self.data).reshape(-1, 1, 150, 150)
         self.data = self.data.transpose((0, 2, 3, 1))
@@ -111,31 +120,34 @@ class MiraBest_F(data.Dataset):
         # Stratify entire data set according to input ratio (seeded)
         if test_size is not None:
             data_train, data_test, targets_train, targets_test = train_test_split(
-                self.data, self.targets,
-                test_size = test_size,
-                stratify  = self.targets,  # Targets to stratify according to
-                random_state = 42
+                self.data,
+                self.targets,
+                test_size=test_size,
+                stratify=self.targets,  # Targets to stratify according to
+                random_state=42,
             )
             if self.train:
-                self.data    = data_train
+                self.data = data_train
                 self.targets = targets_train
             else:
-                self.data    = data_test
+                self.data = data_test
                 self.targets = targets_test
 
         self._load_meta()
 
     def _load_meta(self):
-        path = os.path.join(self.root, self.base_folder, self.meta['filename'])
-        if not check_integrity(path, self.meta['md5']):
-            raise RuntimeError('Dataset metadata file not found or corrupted.' +
-                               ' You can use download=True to download it')
-        with open(path, 'rb') as infile:
+        path = os.path.join(self.root, self.base_folder, self.meta["filename"])
+        if not check_integrity(path, self.meta["md5"]):
+            raise RuntimeError(
+                "Dataset metadata file not found or corrupted."
+                + " You can use download=True to download it"
+            )
+        with open(path, "rb") as infile:
             if sys.version_info[0] == 2:
                 data = pickle.load(infile)
             else:
-                data = pickle.load(infile, encoding='latin1')
-            self.classes = data[self.meta['key']]
+                data = pickle.load(infile, encoding="latin1")
+            self.classes = data[self.meta["key"]]
         self.class_to_idx = {_class: i for i, _class in enumerate(self.classes)}
 
     def __getitem__(self, index):
@@ -149,15 +161,27 @@ class MiraBest_F(data.Dataset):
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
-        img = np.reshape(img,(150,150))
+        img = np.reshape(img, (150, 150))
 
-        if self.transform is not None:
-            img = self.transform(image=img)['image']
+        if self.aug_type == "albumentations":
+            if self.transform is not None:
+                img = self.transform(image=img)["image"]
 
-        if self.target_transform is not None:
-            target = self.target_transform(image=target)['image']
+            if self.target_transform is not None:
+                target = self.target_transform(image=target)["image"]
 
-        #img = Image.fromarray(img,mode='L') ## Why would this be helpful? Just return it as a torch array.
+        elif self.aug_type == "torchvision":
+            img = Image.fromarray(img, mode="L")
+            if self.transform is not None:
+                img = self.transform(img)
+
+            if self.target_transform is not None:
+                target = self.target_transform(target)
+        else:
+            raise NotImplementedError(
+                f"{self.aug_type} not implemented. Currently 'aug_type' must be either 'albumentations' which defaults to Albumentations or 'torchvision' to be functional."
+            )
+
         return img, target
 
     def __len__(self):
@@ -165,7 +189,7 @@ class MiraBest_F(data.Dataset):
 
     def _check_integrity(self):
         root = self.root
-        for fentry in (self.train_list + self.test_list):
+        for fentry in self.train_list + self.test_list:
             filename, md5 = fentry[0], fentry[1]
             fpath = os.path.join(root, self.base_folder, filename)
             if not check_integrity(fpath, md5):
@@ -176,7 +200,7 @@ class MiraBest_F(data.Dataset):
         import tarfile
 
         if self._check_integrity():
-            #print('Files already downloaded and verified')
+            # print('Files already downloaded and verified')
             return
 
         download_url(self.url, self.root, self.filename, self.tgz_md5)
@@ -186,32 +210,38 @@ class MiraBest_F(data.Dataset):
             tar.extractall(path=self.root)
 
     def __repr__(self):
-        fmt_str = 'Dataset ' + self.__class__.__name__ + '\n'
-        fmt_str += '    Number of datapoints: {}\n'.format(self.__len__())
-        tmp = 'train' if self.train is True else 'test'
-        fmt_str += '    Split: {}\n'.format(tmp)
-        fmt_str += '    Root Location: {}\n'.format(self.root)
-        tmp = '    Transforms (if any): '
-        fmt_str += '{0}{1}\n'.format(tmp, self.transform.__repr__().replace('\n', '\n' + ' ' * len(tmp)))
-        tmp = '    Target Transforms (if any): '
-        fmt_str += '{0}{1}'.format(tmp, self.target_transform.__repr__().replace('\n', '\n' + ' ' * len(tmp)))
+        fmt_str = "Dataset " + self.__class__.__name__ + "\n"
+        fmt_str += "    Number of datapoints: {}\n".format(self.__len__())
+        tmp = "train" if self.train is True else "test"
+        fmt_str += "    Split: {}\n".format(tmp)
+        fmt_str += "    Root Location: {}\n".format(self.root)
+        tmp = "    Transforms (if any): "
+        fmt_str += "{0}{1}\n".format(
+            tmp, self.transform.__repr__().replace("\n", "\n" + " " * len(tmp))
+        )
+        tmp = "    Target Transforms (if any): "
+        fmt_str += "{0}{1}".format(
+            tmp, self.target_transform.__repr__().replace("\n", "\n" + " " * len(tmp))
+        )
         return fmt_str
 
+
 # ---------------------------------------------------------------------------------
+
 
 class MBFRFull(MiraBest_F):
 
     """
-        Child class to load all FRI (0) & FRII (1)
-        [100, 102, 104, 110, 112] and [200, 201, 210]
-        """
+    Child class to load all FRI (0) & FRII (1)
+    [100, 102, 104, 110, 112] and [200, 201, 210]
+    """
 
     def __init__(self, *args, **kwargs):
         super(MBFRFull, self).__init__(*args, **kwargs)
 
-        fr1_list = [0,1,2,3,4]
-        fr2_list = [5,6,7]
-        exclude_list = [8,9]
+        fr1_list = [0, 1, 2, 3, 4]
+        fr2_list = [5, 6, 7]
+        exclude_list = [8, 9]
 
         if exclude_list == []:
             return
@@ -223,8 +253,8 @@ class MBFRFull(MiraBest_F):
             fr2 = np.array(fr2_list).reshape(1, -1)
             fr1_mask = (targets.reshape(-1, 1) == fr1).any(axis=1)
             fr2_mask = (targets.reshape(-1, 1) == fr2).any(axis=1)
-            targets[fr1_mask] = 0 # set all FRI to Class~0
-            targets[fr2_mask] = 1 # set all FRII to Class~1
+            targets[fr1_mask] = 0  # set all FRI to Class~0
+            targets[fr2_mask] = 1  # set all FRII to Class~1
             self.data = self.data[exclude_mask]
             self.targets = targets[exclude_mask].tolist()
         else:
@@ -235,13 +265,14 @@ class MBFRFull(MiraBest_F):
             fr2 = np.array(fr2_list).reshape(1, -1)
             fr1_mask = (targets.reshape(-1, 1) == fr1).any(axis=1)
             fr2_mask = (targets.reshape(-1, 1) == fr2).any(axis=1)
-            targets[fr1_mask] = 0 # set all FRI to Class~0
-            targets[fr2_mask] = 1 # set all FRII to Class~1
+            targets[fr1_mask] = 0  # set all FRI to Class~0
+            targets[fr2_mask] = 1  # set all FRII to Class~1
             self.data = self.data[exclude_mask]
             self.targets = targets[exclude_mask].tolist()
 
 
 # ---------------------------------------------------------------------------------
+
 
 class MBFRConfident(MiraBest_F):
 
@@ -253,9 +284,9 @@ class MBFRConfident(MiraBest_F):
     def __init__(self, *args, **kwargs):
         super(MBFRConfident, self).__init__(*args, **kwargs)
 
-        fr1_list = [0,1,2]
-        fr2_list = [5,6]
-        exclude_list = [3,4,7,8,9]
+        fr1_list = [0, 1, 2]
+        fr2_list = [5, 6]
+        exclude_list = [3, 4, 7, 8, 9]
 
         if exclude_list == []:
             return
@@ -267,8 +298,8 @@ class MBFRConfident(MiraBest_F):
             fr2 = np.array(fr2_list).reshape(1, -1)
             fr1_mask = (targets.reshape(-1, 1) == fr1).any(axis=1)
             fr2_mask = (targets.reshape(-1, 1) == fr2).any(axis=1)
-            targets[fr1_mask] = 0 # set all FRI to Class~0
-            targets[fr2_mask] = 1 # set all FRII to Class~1
+            targets[fr1_mask] = 0  # set all FRI to Class~0
+            targets[fr2_mask] = 1  # set all FRII to Class~1
             self.data = self.data[exclude_mask]
             self.targets = targets[exclude_mask].tolist()
         else:
@@ -279,12 +310,14 @@ class MBFRConfident(MiraBest_F):
             fr2 = np.array(fr2_list).reshape(1, -1)
             fr1_mask = (targets.reshape(-1, 1) == fr1).any(axis=1)
             fr2_mask = (targets.reshape(-1, 1) == fr2).any(axis=1)
-            targets[fr1_mask] = 0 # set all FRI to Class~0
-            targets[fr2_mask] = 1 # set all FRII to Class~1
+            targets[fr1_mask] = 0  # set all FRI to Class~0
+            targets[fr2_mask] = 1  # set all FRII to Class~1
             self.data = self.data[exclude_mask]
             self.targets = targets[exclude_mask].tolist()
 
+
 # ---------------------------------------------------------------------------------
+
 
 class MBFRUncertain(MiraBest_F):
 
@@ -296,9 +329,9 @@ class MBFRUncertain(MiraBest_F):
     def __init__(self, *args, **kwargs):
         super(MBFRUncertain, self).__init__(*args, **kwargs)
 
-        fr1_list = [3,4]
+        fr1_list = [3, 4]
         fr2_list = [7]
-        exclude_list = [0,1,2,5,6,8,9]
+        exclude_list = [0, 1, 2, 5, 6, 8, 9]
 
         if exclude_list == []:
             return
@@ -310,8 +343,8 @@ class MBFRUncertain(MiraBest_F):
             fr2 = np.array(fr2_list).reshape(1, -1)
             fr1_mask = (targets.reshape(-1, 1) == fr1).any(axis=1)
             fr2_mask = (targets.reshape(-1, 1) == fr2).any(axis=1)
-            targets[fr1_mask] = 0 # set all FRI to Class~0
-            targets[fr2_mask] = 1 # set all FRII to Class~1
+            targets[fr1_mask] = 0  # set all FRI to Class~0
+            targets[fr2_mask] = 1  # set all FRII to Class~1
             self.data = self.data[exclude_mask]
             self.targets = targets[exclude_mask].tolist()
         else:
@@ -322,12 +355,14 @@ class MBFRUncertain(MiraBest_F):
             fr2 = np.array(fr2_list).reshape(1, -1)
             fr1_mask = (targets.reshape(-1, 1) == fr1).any(axis=1)
             fr2_mask = (targets.reshape(-1, 1) == fr2).any(axis=1)
-            targets[fr1_mask] = 0 # set all FRI to Class~0
-            targets[fr2_mask] = 1 # set all FRII to Class~1
+            targets[fr1_mask] = 0  # set all FRI to Class~0
+            targets[fr2_mask] = 1  # set all FRII to Class~1
             self.data = self.data[exclude_mask]
             self.targets = targets[exclude_mask].tolist()
 
+
 # ---------------------------------------------------------------------------------
+
 
 class MBHybrid(MiraBest_F):
 
@@ -341,7 +376,7 @@ class MBHybrid(MiraBest_F):
 
         h1_list = [8]
         h2_list = [9]
-        exclude_list = [0,1,2,3,4,5,6,7]
+        exclude_list = [0, 1, 2, 3, 4, 5, 6, 7]
 
         if exclude_list == []:
             return
@@ -353,8 +388,8 @@ class MBHybrid(MiraBest_F):
             h2 = np.array(h2_list).reshape(1, -1)
             h1_mask = (targets.reshape(-1, 1) == h1).any(axis=1)
             h2_mask = (targets.reshape(-1, 1) == h2).any(axis=1)
-            targets[h1_mask] = 0 # set all FRI to Class~0
-            targets[h2_mask] = 1 # set all FRII to Class~1
+            targets[h1_mask] = 0  # set all FRI to Class~0
+            targets[h2_mask] = 1  # set all FRII to Class~1
             self.data = self.data[exclude_mask]
             self.targets = targets[exclude_mask].tolist()
         else:
@@ -365,12 +400,14 @@ class MBHybrid(MiraBest_F):
             h2 = np.array(h2_list).reshape(1, -1)
             h1_mask = (targets.reshape(-1, 1) == h1).any(axis=1)
             h2_mask = (targets.reshape(-1, 1) == h2).any(axis=1)
-            targets[h1_mask] = 0 # set all FRI to Class~0
-            targets[h2_mask] = 1 # set all FRII to Class~1
+            targets[h1_mask] = 0  # set all FRI to Class~0
+            targets[h2_mask] = 1  # set all FRII to Class~1
             self.data = self.data[exclude_mask]
             self.targets = targets[exclude_mask].tolist()
 
+
 # ---------------------------------------------------------------------------------
+
 
 class MBRandom(MiraBest_F):
 
@@ -378,23 +415,23 @@ class MBRandom(MiraBest_F):
     Child class to load 50 random FRI and 50 random FRII sources
     """
 
-    def __init__(self, certainty='all', morphologies='all', *args, **kwargs):
+    def __init__(self, certainty="all", morphologies="all", *args, **kwargs):
         super(MBRandom, self).__init__(*args, **kwargs)
 
         # Checking flags
         # ------------------
 
-        if certainty == 'certain':
+        if certainty == "certain":
             certainty_list1 = np.array([0, 1, 2])
             certainty_list2 = np.array([5, 6])
-        elif certainty == 'uncertain':
+        elif certainty == "uncertain":
             certainty_list1 = np.array([3, 4])
             certainty_list2 = np.array([7])
         else:
             certainty_list1 = np.array([0, 1, 2, 3, 4])
             certainty_list2 = np.array([5, 6, 7])
 
-        if morphologies == 'standard':
+        if morphologies == "standard":
             morphology_list1 = np.array([0, 3])
             morphology_list2 = np.array([5, 7])
         else:
@@ -419,8 +456,8 @@ class MBRandom(MiraBest_F):
             h2_indices = np.where(h2_mask)
             h1_random = np.random.choice(h1_indices[0], 50, replace=False)
             h2_random = np.random.choice(h2_indices[0], 50, replace=False)
-            targets[h1_random] = 0 # set all FRI to Class~0
-            targets[h2_random] = 1 # set all FRII to Class~1
+            targets[h1_random] = 0  # set all FRI to Class~0
+            targets[h2_random] = 1  # set all FRII to Class~1
             target_list = np.concatenate((h1_random, h2_random))
             exclude_mask = (targets.reshape(-1, 1) == target_list).any(axis=1)
             self.data = self.data[exclude_mask]
@@ -435,8 +472,8 @@ class MBRandom(MiraBest_F):
             h2_indices = np.where(h2_mask)
             h1_random = np.random.choice(h1_indices[0], 50, replace=False)
             h2_random = np.random.choice(h2_indices[0], 50, replace=False)
-            targets[h1_random] = 0 # set all FRI to Class~0
-            targets[h2_random] = 1 # set all FRII to Class~1
+            targets[h1_random] = 0  # set all FRI to Class~0
+            targets[h2_random] = 1  # set all FRII to Class~1
             target_list = np.concatenate((h1_random, h2_random))
             exclude_mask = (targets.reshape(-1, 1) == target_list).any(axis=1)
             self.data = self.data[exclude_mask]
