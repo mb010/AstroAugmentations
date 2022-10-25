@@ -35,9 +35,7 @@ class MiraBest_F(data.Dataset):
     """
 
     base_folder = "F_batches"
-    url = (
-        "http://www.jb.man.ac.uk/research/MiraBest/MiraBest_F/MiraBest_F_batches.tar.gz"
-    )
+    url = "http://www.jb.man.ac.uk/research/MiraBest/MiraBest_F/MiraBest_F_batches.tar.gz"
     filename = "MiraBest_F_batches.tar.gz"
     tgz_md5 = "7d4e3a623d29db7204bce81676ee8ce2"
     train_list = [
@@ -68,6 +66,7 @@ class MiraBest_F(data.Dataset):
         download=False,
         test_size=None,
         aug_type="albumentations",
+        seed=42,
     ):
 
         self.root = os.path.expanduser(root)
@@ -75,20 +74,29 @@ class MiraBest_F(data.Dataset):
         self.target_transform = target_transform
         self.train = train  # training set or test set
         self.aug_type = aug_type
+        self.seed = seed
 
         if download:
             self.download()
 
         if not self._check_integrity():
             raise RuntimeError(
-                "Dataset not found or corrupted."
-                + " You can use download=True to download it"
+                "Dataset not found or corrupted." + " You can use download=True to download it"
             )
 
-        if self.train and test_size is None:
+        # return all data (no split at all)
+        if self.train is None and test_size is None:
+            downloaded_list = self.train_list + self.test_list
+
+        # return original mirabest train data
+        elif self.train and test_size is None:
             downloaded_list = self.train_list
+
+        # return original mirabest test data
         elif not self.train and test_size is None:
             downloaded_list = self.test_list
+
+        # return stratified train or test split
         else:
             downloaded_list = self.train_list + self.test_list
 
@@ -124,7 +132,7 @@ class MiraBest_F(data.Dataset):
                 self.targets,
                 test_size=test_size,
                 stratify=self.targets,  # Targets to stratify according to
-                random_state=42,
+                random_state=self.seed,
             )
             if self.train:
                 self.data = data_train
