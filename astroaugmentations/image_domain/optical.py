@@ -1,6 +1,7 @@
 import numpy as np
 import albumentations as A
 from astropy.modeling.models import Sersic2D
+from cv2 import resize
 
 __all__ = [
     "ChannelWiseDropout",
@@ -272,18 +273,22 @@ class CroppedTemplateOverlap():
 
     Attributes:
         mode (str):
-            Which mode the transformation works in. Either: 'template' or 'dataset'
+            Which mode the transformation works in. Either: 'template' or 'dataset' or 'catalog'
         template (np.ndarray)
         img_weight (float)
         dataset (indexable np.ndarrays with output for `len` function)
         template_transform (Compsed albumentations transfromation)
+        catalog (pd.DataFrame) - catalog object for GZ datasets from https://github.com/mwalmsley/galaxy-datasets for superimposing images
+        resolution (int) - resolution to resize galaxy-datasets catalog images to be pasted
     """
     def __init__(self,
                  mode:str='template',
                  template:np.ndarray=None,
                  img_weight:float=1,
                  dataset=None,
-                 template_transform=A.Compose([A.ToFloat(p=1)])
+                 template_transform=A.Compose([A.ToFloat(p=1)]),
+                 catalog = None,
+                 resolution = None,
                 ):
         """Init CroppedTemplateOverlap with given attributes."""
         self.template = template
@@ -292,6 +297,8 @@ class CroppedTemplateOverlap():
         self.mode=mode
         self.template_transform = template_transform
         self.rng = np.random.default_rng()
+        self.catalog = catalog
+        self.resolution = resolution
 
     def __call__(self, image, **kwargs):
         """Apply generated transform to an input image."""
@@ -311,7 +318,30 @@ class CroppedTemplateOverlap():
             #datasample = A.ToFloat(always_apply=True)(image=datasample)['image']
             datasample = self.template_transform(image=datasample)['image']
             image = A.TemplateTransform(datasample, img_weight=1, always_apply=True)(image=image)['image']
+        
+        elif self.mode == "catalog":
+            try:
+                from simplejpeg import decode_jpeg
+            except ImportError:
+                raise ImportError(
+                    "simplejpeg is not installed. Install via https://pypi.org/project/simplejpeg/"
+                )
+            height, width = image.shape[:2]
+            galaxy = self.catalog.iloc[self.rng.integers(0, len(self.catalog))]
+            with open(galaxy["file_loc"], "rb") as f:
+                datasample = decode_jpeg(f.read())
+            datasample = resize(datasample, (self.resolution, self.resolution))
+            datasample = self.template_transform(image=datasample)["image"]
+            ShiftScaleRotate = A.ShiftScaleRotate(
+                shift_limit=0.3,
+                scale_limit=(-0.3, 0.3),
+                rotate_limit=360,
+                border_mode=3,
+            )
+            datasample = ShiftScaleRotate(image=datasample)["image"]
+            image = A.TemplateTransform(datasample, img_weight=1, always_apply=True)(
+                image=image
+            )["image"]
         else:
             raise NotImplementedError
-
         return image
