@@ -7,7 +7,7 @@ __all__ = [
     "BrightnessGradient"
 ]
 class MinMaxNormalize():
-    def __init__(self, mean=0.5, std=0.25):
+    def __init__(self, mean=0.5, std=0.5, minmax=True):
         self.mean = mean
         self.std = std
     def __call__(self, image, **kwargs):
@@ -16,6 +16,8 @@ class MinMaxNormalize():
         transformed = transformed/max
         transformed = transformed-self.mean
         transformed = transformed/self.std
+        transformed = (transformed-transformed.min())
+        transformed = transformed/transformed.max()
         return transformed
 
 class ToGray():

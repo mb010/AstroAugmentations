@@ -2,6 +2,7 @@ from .image_domain import *
 from . import datasets
 from . import utils
 from . import composed
+from . import image_domain
 
 # cv2 changes laregly not a hinderence when using multithreaded dataloaders,
 # but potentially essential for multi-gpu usages.
