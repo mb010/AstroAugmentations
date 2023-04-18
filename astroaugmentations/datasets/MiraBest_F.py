@@ -1,6 +1,7 @@
-import os.path
+import os, sys
 import numpy as np
-import sys
+from astropy.io import fits
+import pandas as pd
 
 if sys.version_info[0] == 2:
     import cPickle as pickle
@@ -12,6 +13,152 @@ import torch.utils.data as data
 from torchvision.datasets.utils import download_url, check_integrity
 
 from PIL import Image
+
+
+class MiraBest_FITS(data.Dataset):
+    def __init__(
+        self,
+        data_folder="/share/nas2_5/mbowles/data/MiraBest_FITS",
+        train=True,
+        transform=None,
+        target_transform=None,
+        download=False,
+        test_size=0.2,
+        df_filter=lambda x: x,
+        aug_type="albumentations",
+        memmap=True,
+        stratified=True,
+        seed=42,
+    ) -> None:
+        super().__init__()
+        if download:
+            self.download()
+        self.data_folder = data_folder.rstrip("/")
+        self.train = train
+        self.seed = seed
+        self.target_transform = target_transform
+        self.test_size = test_size
+        self.aug_type = aug_type
+        self.transform = transform
+        self.memmap = memmap
+        self.df = self._load_meta_data()
+        self.df = df_filter(self.df)
+        self.targets = self._get_targets()
+        self._sample()
+
+    def _sample(self):
+        (
+            train_data_indicies,
+            test_data_indicies,
+            train_target,
+            test_target,
+        ) = train_test_split(
+            self.df.index,
+            self.targets,
+            test_size=self.test_size,
+            random_state=self.seed,
+        )
+        if self.train:
+            self.df = self.df.iloc[train_data_indicies]
+            self.targets = train_target
+        else:
+            self.df = self.df.iloc[test_data_indicies]
+            self.targets = test_target
+
+    def _load_meta_data(self):
+        df = {
+            "file_path": [],
+            "class": [],
+            "confidence": [],
+            "subgroup": [],
+            "ra": [],
+            "dec": [],
+            "z": [],
+            "extent": [],
+        }
+        filenames = [
+            f
+            for f in os.listdir(self.data_folder)
+            if (
+                os.path.isfile(os.path.join(self.data_folder, f))
+                and f.split(".")[-1] == "fits"
+            )
+        ]
+        for f in filenames:
+            split = f[:-5].split("_")
+            df["file_path"].append(f"{self.data_folder}/{f}")
+            df["class"].append(f"FR{split[0][0]}")
+            df["confidence"].append(
+                "confident" if int(split[0][1]) == 0 else "uncertain"
+            )
+            df["subgroup"].append(int(split[0][2]))
+            df["ra"].append(float(split[1][:7]))
+            df["dec"].append(float(split[1][7:]))
+            df["z"].append(float(split[2]))
+            df["extent"].append(float(split[3]))
+        return pd.DataFrame.from_dict(df)
+
+    def _get_targets(self):
+        targets = np.asarray(self.df["class"].values)
+        return np.where(targets == "FR1", 0, 1)
+
+    def __getitem__(self, index) -> np.array:
+        with fits.open(self.df.iloc[index]["file_path"], memmap=self.memmap) as hdul:
+            img = hdul[0].data
+        target = self.targets[index]
+
+        if self.aug_type == "albumentations":
+            if self.transform is not None:
+                img = self.transform(image=img)["image"]
+
+            if self.target_transform is not None:
+                target = self.target_transform(image=target)["image"]
+
+        elif self.aug_type == "torchvision":
+            img = Image.fromarray(img, mode="L")
+            if self.transform is not None:
+                img = self.transform(img)
+
+            if self.target_transform is not None:
+                target = self.target_transform(target)
+        else:
+            raise NotImplementedError(
+                f"{self.aug_type} not implemented. Currently 'aug_type' must be either 'albumentations' which defaults to Albumentations or 'torchvision' to be functional."
+            )
+
+        return np.expand_dims(img, axis=0), target
+
+    def __len__(self):
+        return len(self.df)
+        raise NotImplementedError
+
+    def download(self):
+        raise NotImplementedError(
+            f"Automatic download not implemented. Files downloaded from https://github.com/fmporter/MiraBest/tree/master/FITS"
+        )
+        if not self._check_integrity():
+            raise RuntimeError(
+                "Dataset not found or corrupted. You can use download=True to download it"
+            )
+
+    def _check_integrity(self):
+        raise NotImplementedError
+
+    def __repr__(self):
+        fmt_str = "Dataset " + self.__class__.__name__ + "\n"
+        fmt_str += "    Number of datapoints: {}\n".format(self.__len__())
+        tmp = "train" if self.train is True else "test"
+        fmt_str += "    Split: {}\n".format(tmp)
+        fmt_str += "    Location: {}\n".format(self.data_folder)
+        tmp = "    Transforms (if any): "
+        fmt_str += "{0}{1}\n".format(
+            tmp, self.transform.__repr__().replace("\n", "\n" + " " * len(tmp))
+        )
+        tmp = "    Target Transforms (if any): "
+        fmt_str += "{0}{1}".format(
+            tmp, self.target_transform.__repr__().replace("\n", "\n" + " " * len(tmp))
+        )
+        return fmt_str
 
 
 class MiraBest_F(data.Dataset):
@@ -69,7 +216,6 @@ class MiraBest_F(data.Dataset):
         test_size=None,
         aug_type="albumentations",
     ):
-
         self.root = os.path.expanduser(root)
         self.transform = transform
         self.target_transform = target_transform
