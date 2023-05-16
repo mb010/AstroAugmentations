@@ -1,3 +1,4 @@
+import random
 import torch
 from torch.utils.data import Dataset
 from astropy.io import fits
@@ -12,7 +13,7 @@ from astropy.io import fits
 from pathlib import Path
 import numpy as np
 from torchvision.transforms import RandomCrop
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 class FitsDataset(Dataset):
@@ -49,15 +50,31 @@ class FitsDataset(Dataset):
         self,
         root_dir: str,
         hdu_index: int = 0,
-        num_channels: int = 1,
+        num_new_channels: int = None,
         data_type: torch.dtype = torch.float32,
         crop_size: Tuple[int, int] = (256, 256),
+        stage: Optional[str] = None,
+        seed: Optional[int] = None,
     ):
-        self.file_paths = self._get_file_paths(root_dir)
         self.hdu_index = hdu_index
-        self.num_channels = num_channels
+        self.num_new_channels = num_new_channels
         self.data_type = data_type
         self.crop_transform = RandomCrop(crop_size)
+        self.file_paths = random.Random(seed).shuffle(self._get_file_paths(root_dir))
+        self.file_paths = self._split_data(stage)
+
+    def _split_data(self, stage):
+        # Stage must be one of ['fit', 'validate', 'test', 'predict']
+        if stage == "fit":
+            return self.file_paths[: 4 * len(self.file_paths) // 5]  # 80%
+        elif stage == "validate":
+            return self.file_paths[
+                -2 * len(self.file_paths // 10) : -len(self.file_paths // 10)  # 10%
+            ]
+        elif stage == "test":
+            return self.file_paths[-len(self.file_paths // 10)]  # 10%
+        else:
+            return self.file_paths
 
     def _get_file_paths(self, root_dir: str) -> list:
         root_path = Path(root_dir)
@@ -77,6 +94,8 @@ class FitsDataset(Dataset):
 
         data_tensor = torch.tensor(data, dtype=self.data_type)
         data_tensor = self.crop_transform(data_tensor)
+
+        data_tensor = data_tensor.squeeze()
 
         file_name = file_path.name  # Extract file name
         return data_tensor, file_name  # Return data and file name

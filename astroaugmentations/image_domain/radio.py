@@ -90,6 +90,7 @@ class UVAugmentation:
         rfi_p: Optional[float] = None,
         rfi_mag: Optional[float] = None,
         rfi_prob: Optional[float] = None,
+        fft: bool = False,
     ) -> None:
         """Augments an image in the fourrier space emulating additional RFI flagging, noise, and RFI.
 
@@ -101,6 +102,7 @@ class UVAugmentation:
             rfi_p (Optional[float], optional): Probability that RFI augmentation is applied. Defaults to None.
             rfi_mag (Optional[float], optional): Variance of normal distribution for RFI sampling. Defaults to None.
             rfi_prob (Optional[float], optional): Probability of a given pixel to have RFI added. Defaults to None.
+            fft (bool): Parameter to return image in fourrier space (True). Defaults to False.
         """
         transforms = []
         if (dropout_mag is not None) and (dropout_p is not None):
@@ -147,6 +149,8 @@ class UVAugmentation:
     def __call__(self, image, **kwargs) -> Any:
         uv = np.fft.fft2(image)
         uv = self.transform(image=uv)["image"]
+        if self.fft:
+            return uv
         return np.real(np.fft.ifft2(uv))
 
 
