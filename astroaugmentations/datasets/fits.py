@@ -26,6 +26,7 @@ class FitsDataset(Dataset):
         num_channels (int): Number of channels for the image. Default is 1.
         data_type (torch.dtype): Desired data type of the tensor. Default is torch.float32.
         crop_size (Tuple[int, int]): Size of the random crop. Default is (256, 256).
+        transform (Optional[callable]): transform to apply to the images.
 
     Returns:
         Tuple[torch.Tensor, str]: A tuple containing the data tensor and the file name.
@@ -55,6 +56,7 @@ class FitsDataset(Dataset):
         crop_size: Tuple[int, int] = (256, 256),
         stage: Optional[str] = None,
         seed: Optional[int] = None,
+        transform: Optional[callable] = None,
     ):
         self.hdu_index = hdu_index
         self.num_new_channels = num_new_channels
@@ -62,6 +64,7 @@ class FitsDataset(Dataset):
         self.crop_transform = RandomCrop(crop_size)
         self.file_paths = random.Random(seed).shuffle(self._get_file_paths(root_dir))
         self.file_paths = self._split_data(stage)
+        self.transform = transform
 
     def _split_data(self, stage):
         # Stage must be one of ['fit', 'validate', 'test', 'predict']
@@ -96,6 +99,8 @@ class FitsDataset(Dataset):
         data_tensor = self.crop_transform(data_tensor)
 
         data_tensor = data_tensor.squeeze()
+        if self.transform is not None:
+            data_tensor = self.transform(data_tensor)
 
         file_name = file_path.name  # Extract file name
         return data_tensor, file_name  # Return data and file name
