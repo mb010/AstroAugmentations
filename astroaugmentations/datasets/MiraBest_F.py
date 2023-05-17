@@ -33,7 +33,7 @@ class MiraBest_FITS(data.Dataset):
         super().__init__()
         if download:
             self.download()
-        self.data_folder = data_folder.rstrip("/")
+        self.root = root.rstrip("/")
         self.train = train
         self.seed = seed
         self.target_transform = target_transform
@@ -78,15 +78,15 @@ class MiraBest_FITS(data.Dataset):
         }
         filenames = [
             f
-            for f in os.listdir(self.data_folder)
+            for f in os.listdir(self.root)
             if (
-                os.path.isfile(os.path.join(self.data_folder, f))
+                os.path.isfile(os.path.join(self.root, f))
                 and f.split(".")[-1] == "fits"
             )
         ]
         for f in filenames:
             split = f[:-5].split("_")
-            df["file_path"].append(f"{self.data_folder}/{f}")
+            df["file_path"].append(f"{self.root}/{f}")
             df["class"].append(f"FR{split[0][0]}")
             df["confidence"].append(
                 "confident" if int(split[0][1]) == 0 else "uncertain"
@@ -149,7 +149,7 @@ class MiraBest_FITS(data.Dataset):
         fmt_str += "    Number of datapoints: {}\n".format(self.__len__())
         tmp = "train" if self.train is True else "test"
         fmt_str += "    Split: {}\n".format(tmp)
-        fmt_str += "    Location: {}\n".format(self.data_folder)
+        fmt_str += "    Location: {}\n".format(self.root)
         tmp = "    Transforms (if any): "
         fmt_str += "{0}{1}\n".format(
             tmp, self.transform.__repr__().replace("\n", "\n" + " " * len(tmp))
