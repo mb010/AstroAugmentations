@@ -151,7 +151,7 @@ class UVAugmentation:
         uv = np.fft.fft2(image)
         uv = self.transform(image=uv)["image"]
         if self.fft:
-            return uv
+            return np.stack((np.real(uv), np.imag(uv)))
         return np.real(np.fft.ifft2(uv))
 
 
