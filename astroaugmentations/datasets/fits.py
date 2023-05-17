@@ -75,11 +75,9 @@ class FitsDataset(Dataset):
         train_index = 1 - self.val_fraction - self.test_fraction
         val_index = train_index + self.val_fraction
         if stage == "fit":
-            return self.file_paths[: int(len(self.file_paths) * (train_index))]
+            return self.file_paths[:train_index]
         elif stage == "validate":
-            return self.file_paths[
-                train_index : val_index)
-            ]
+            return self.file_paths[train_index:val_index]
         elif stage == "test":
             return self.file_paths[val_index]
         else:
