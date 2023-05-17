@@ -57,6 +57,8 @@ class FitsDataset(Dataset):
         stage: Optional[str] = None,
         seed: Optional[int] = None,
         transform: Optional[callable] = None,
+        test_fraction: float = 0.15,
+        val_fraction: float = 0.15,
     ):
         self.hdu_index = hdu_index
         self.num_new_channels = num_new_channels
@@ -65,17 +67,21 @@ class FitsDataset(Dataset):
         self.file_paths = random.Random(seed).shuffle(self._get_file_paths(root_dir))
         self.file_paths = self._split_data(stage)
         self.transform = transform
+        self.test_fraction = test_fraction
+        self.val_fraction = val_fraction
 
     def _split_data(self, stage):
         # Stage must be one of ['fit', 'validate', 'test', 'predict']
+        train_index = 1 - self.val_fraction - self.test_fraction
+        val_index = train_index + self.val_fraction
         if stage == "fit":
-            return self.file_paths[: 4 * len(self.file_paths) // 5]  # 80%
+            return self.file_paths[: int(len(self.file_paths) * (train_index))]
         elif stage == "validate":
             return self.file_paths[
-                -2 * len(self.file_paths // 10) : -len(self.file_paths // 10)  # 10%
+                train_index : val_index)
             ]
         elif stage == "test":
-            return self.file_paths[-len(self.file_paths // 10)]  # 10%
+            return self.file_paths[val_index]
         else:
             return self.file_paths
 
