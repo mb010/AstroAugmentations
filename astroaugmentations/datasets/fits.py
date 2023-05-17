@@ -74,8 +74,8 @@ class FitsDataset(Dataset):
 
     def _split_data(self, stage):
         # Stage must be one of ['fit', 'validate', 'test', 'predict']
-        val_index = int(self.__len__ * (1 - self.val_fraction - self.test_fraction))
-        test_index = int(self.__len__ * (1 - self.test_fraction))
+        val_index = int(self.__len__() * (1 - self.val_fraction - self.test_fraction))
+        test_index = int(self.__len__() * (1 - self.test_fraction))
         if stage == "fit":
             return self.file_paths[:val_index]
         elif stage == "validate":
