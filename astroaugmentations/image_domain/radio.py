@@ -145,6 +145,7 @@ class UVAugmentation:
                 )
             )
         self.transform = A.Compose(transforms)
+        self.fft = fft
 
     def __call__(self, image, **kwargs) -> Any:
         uv = np.fft.fft2(image)
