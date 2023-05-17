@@ -63,12 +63,12 @@ class FitsDataset(Dataset):
         self.hdu_index = hdu_index
         self.num_new_channels = num_new_channels
         self.data_type = data_type
-        self.crop_transform = RandomCrop(crop_size)
-        self.file_paths = random.Random(seed).shuffle(self._get_file_paths(root_dir))
-        self.file_paths = self._split_data(stage)
-        self.transform = transform
         self.test_fraction = test_fraction
         self.val_fraction = val_fraction
+        self.crop_transform = RandomCrop(crop_size)
+        self.file_paths = random.Random(seed).shuffle(self._get_file_paths(root_dir))
+        self.transform = transform
+        self.file_paths = self._split_data(stage)
 
     def _split_data(self, stage):
         # Stage must be one of ['fit', 'validate', 'test', 'predict']
