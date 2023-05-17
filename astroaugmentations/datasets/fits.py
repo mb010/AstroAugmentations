@@ -66,8 +66,10 @@ class FitsDataset(Dataset):
         self.test_fraction = test_fraction
         self.val_fraction = val_fraction
         self.crop_transform = RandomCrop(crop_size)
-        self.file_paths = random.Random(seed).shuffle(self._get_file_paths(root_dir))
         self.transform = transform
+        self.file_paths = self._get_file_paths(root_dir)  # get paths
+        random.Random(seed).shuffle(self.file_paths)  # shuffle in place
+        # split according to stage
         self.file_paths = self._split_data(stage)
 
     def _split_data(self, stage):
@@ -79,7 +81,7 @@ class FitsDataset(Dataset):
         elif stage == "validate":
             return self.file_paths[train_index:val_index]
         elif stage == "test":
-            return self.file_paths[val_index]
+            return self.file_paths[val_index:]
         else:
             return self.file_paths
 
