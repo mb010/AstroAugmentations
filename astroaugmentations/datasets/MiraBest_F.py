@@ -18,7 +18,7 @@ from PIL import Image
 class MiraBest_FITS(data.Dataset):
     def __init__(
         self,
-        data_folder="/share/nas2_5/mbowles/data/MiraBest_FITS",
+        root="/share/nas2_5/mbowles/data/MiraBest_FITS",
         train=True,
         transform=None,
         target_transform=None,
@@ -102,7 +102,7 @@ class MiraBest_FITS(data.Dataset):
         targets = np.asarray(self.df["class"].values)
         return np.where(targets == "FR1", 0, 1)
 
-    def __getitem__(self, index) -> np.array:
+    def __getitem__(self, index):
         with fits.open(self.df.iloc[index]["file_path"], memmap=self.memmap) as hdul:
             img = hdul[0].data
         target = self.targets[index]
