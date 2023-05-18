@@ -109,7 +109,7 @@ class FitsDataset(Dataset):
         data_tensor = data_tensor.squeeze()
         if self.transform is not None:
             if self.aug_type == "albumentations":
-                data_tensor = self.transform(image=data_tensor)["image"].to(
+                data_tensor = self.transform(image=np.asarray(data_tensor))["image"].to(
                     self.data_type
                 )
             else:
