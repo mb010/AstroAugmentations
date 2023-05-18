@@ -128,10 +128,10 @@ class MiraBest_FITS(data.Dataset):
             raise NotImplementedError(
                 f"{self.aug_type} not implemented. Currently 'aug_type' must be either 'albumentations' which defaults to Albumentations or 'torchvision' to be functional."
             )
-        if len(img.shape)==2:
+        if len(img.shape) == 2:
             img = np.expand_dims(img, axis=0)
 
-        return torch.tensor(img, dtype=self.data_type), target
+        return torch.tensor(img).to(self.data_type), target
 
     def __len__(self):
         return len(self.df)
