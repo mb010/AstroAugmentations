@@ -107,7 +107,7 @@ class MiraBest_FITS(data.Dataset):
 
     def __getitem__(self, index):
         with fits.open(self.df.iloc[index]["file_path"], memmap=self.memmap) as hdul:
-            img = hdul[0].data
+            img = hdul[0].data.astype("float32")
         target = self.targets[index]
 
         if self.aug_type == "albumentations":
@@ -128,8 +128,10 @@ class MiraBest_FITS(data.Dataset):
             raise NotImplementedError(
                 f"{self.aug_type} not implemented. Currently 'aug_type' must be either 'albumentations' which defaults to Albumentations or 'torchvision' to be functional."
             )
+        if len(img.shape)==2:
+            img = np.expand_dims(img, axis=0)
 
-        return torch.tensor(np.expand_dims(img, axis=0), dtype=self.data_type), target
+        return torch.tensor(img, dtype=self.data_type), target
 
     def __len__(self):
         return len(self.df)
