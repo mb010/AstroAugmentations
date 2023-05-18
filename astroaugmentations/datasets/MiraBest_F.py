@@ -2,6 +2,7 @@ import os, sys
 import numpy as np
 from astropy.io import fits
 import pandas as pd
+import torch
 
 if sys.version_info[0] == 2:
     import cPickle as pickle
@@ -29,6 +30,7 @@ class MiraBest_FITS(data.Dataset):
         memmap=True,
         stratified=True,
         seed=42,
+        data_type=torch.float32,
     ) -> None:
         super().__init__()
         if download:
@@ -45,6 +47,7 @@ class MiraBest_FITS(data.Dataset):
         self.df = df_filter(self.df)
         self.targets = self._get_targets()
         self._sample()
+        self.data_type = data_type
 
     def _sample(self):
         (
@@ -126,7 +129,7 @@ class MiraBest_FITS(data.Dataset):
                 f"{self.aug_type} not implemented. Currently 'aug_type' must be either 'albumentations' which defaults to Albumentations or 'torchvision' to be functional."
             )
 
-        return np.expand_dims(img, axis=0), target
+        return np.expand_dims(img, axis=0).to(self.data_type), target
 
     def __len__(self):
         return len(self.df)
@@ -215,6 +218,7 @@ class MiraBest_F(data.Dataset):
         download=False,
         test_size=None,
         aug_type="albumentations",
+        data_type="double",
     ):
         self.root = os.path.expanduser(root)
         self.transform = transform

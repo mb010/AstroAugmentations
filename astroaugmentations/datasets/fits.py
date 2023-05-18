@@ -106,7 +106,7 @@ class FitsDataset(Dataset):
 
         data_tensor = data_tensor.squeeze()
         if self.transform is not None:
-            data_tensor = self.transform(data_tensor)
+            data_tensor = self.transform(data_tensor).to(self.data_type)
 
         file_name = file_path.name  # Extract file name
         return data_tensor, file_name  # Return data and file name
