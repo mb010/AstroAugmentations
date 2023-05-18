@@ -1,7 +1,7 @@
 import numpy as np
 import albumentations as A
 from skimage.segmentation import slic
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 __all__ = ["SpectralIndex", "CustomKernelConvolution", "RFI", "UVAugmentation"]
 
@@ -91,6 +91,7 @@ class UVAugmentation:
         rfi_mag: Optional[float] = None,
         rfi_prob: Optional[float] = None,
         fft: bool = False,
+        out: Optional[List[callable]] = None,
     ) -> None:
         """Augments an image in the fourrier space emulating additional RFI flagging, noise, and RFI.
 
@@ -104,6 +105,7 @@ class UVAugmentation:
             rfi_prob (Optional[float], optional): Probability of a given pixel to have RFI added. Defaults to None.
             fft (bool): Parameter to return image in fourrier space (True). Defaults to False.
         """
+        self.out = out
         transforms = []
         if (dropout_mag is not None) and (dropout_p is not None):
             transforms.append(
@@ -150,9 +152,14 @@ class UVAugmentation:
     def __call__(self, image, **kwargs) -> Any:
         uv = np.fft.fft2(image)
         uv = self.transform(image=uv)["image"]
-        if self.fft:
-            return np.stack((np.real(uv), np.imag(uv)))
-        return np.real(np.fft.ifft2(uv))
+        if not self.fft:
+            uv = np.stack((np.real(uv), np.imag(uv)))
+        else:
+            uv = np.real(np.fft.ifft2(uv))
+        if self.out is not None:
+            return np.stack([o(uv) for o in self.out])
+        else:
+            return uv
 
 
 class SpectralIndex:
