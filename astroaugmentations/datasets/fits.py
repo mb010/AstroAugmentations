@@ -57,6 +57,7 @@ class FitsDataset(Dataset):
         stage: Optional[str] = None,
         seed: Optional[int] = None,
         transform: Optional[callable] = None,
+        aug_type: Optional[str] = None,
         test_fraction: float = 0.15,
         val_fraction: float = 0.15,
     ):
@@ -67,6 +68,7 @@ class FitsDataset(Dataset):
         self.val_fraction = val_fraction
         self.crop_transform = RandomCrop(crop_size)
         self.transform = transform
+        self.aug_type = aug_type
         self.file_paths = self._get_file_paths(root_dir)  # get paths
         random.Random(seed).shuffle(self.file_paths)  # shuffle in place
         # split according to stage
@@ -106,7 +108,12 @@ class FitsDataset(Dataset):
 
         data_tensor = data_tensor.squeeze()
         if self.transform is not None:
-            data_tensor = self.transform(data_tensor).to(self.data_type)
+            if self.aug_type == "albumentations":
+                data_tensor = self.transform(image=data_tensor)["image"].to(
+                    self.data_type
+                )
+            else:
+                data_tensor = self.transform(data_tensor).to(self.data_type)
 
         file_name = file_path.name  # Extract file name
         return data_tensor, file_name  # Return data and file name
