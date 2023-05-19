@@ -60,6 +60,7 @@ class FitsDataset(Dataset):
         aug_type: Optional[str] = None,
         test_fraction: float = 0.15,
         val_fraction: float = 0.15,
+        memmap: bool = True,
     ):
         self.hdu_index = hdu_index
         self.num_new_channels = num_new_channels
@@ -73,6 +74,7 @@ class FitsDataset(Dataset):
         random.Random(seed).shuffle(self.file_paths)  # shuffle in place
         # split according to stage
         self.file_paths = self._split_data(stage)
+        self.memmap = memmap
 
     def _split_data(self, stage):
         # Stage must be one of ['fit', 'validate', 'test', 'predict']
@@ -94,7 +96,7 @@ class FitsDataset(Dataset):
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, str]:
         file_path = self.file_paths[index]
-        with fits.open(file_path) as hdul:
+        with fits.open(file_path, memmap=self.memmap) as hdul:
             data = hdul[self.hdu_index].data.astype(self.data_type)
 
         if self.num_new_channels is not None:
