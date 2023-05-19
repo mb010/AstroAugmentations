@@ -150,15 +150,13 @@ class UVAugmentation:
         self.fft = fft
 
     def __call__(self, image, **kwargs) -> Any:
-        uv = np.fft.fft2(image)
+        uv = np.fft.fft2(np.nan_to_num(image, nan=0))
         uv = self.transform(image=uv)["image"]
         if not self.fft:
             uv = np.real(np.fft.ifft2(uv))
         if self.out is not None:
             uv = np.stack([o(uv) for o in self.out])
-            return np.nan_to_num(uv, nan=0.0)
-        else:
-            return np.nan_to_num(uv, nan=0.0)
+        return uv
 
 
 class SpectralIndex:
