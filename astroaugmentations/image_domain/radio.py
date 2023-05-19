@@ -155,9 +155,10 @@ class UVAugmentation:
         if not self.fft:
             uv = np.real(np.fft.ifft2(uv))
         if self.out is not None:
-            return np.stack([o(uv) for o in self.out])
+            uv = np.stack([o(uv) for o in self.out])
+            return np.nan_to_num(uv, nan=0.0)
         else:
-            return uv
+            return np.nan_to_num(uv, nan=0.0)
 
 
 class SpectralIndex:
