@@ -97,7 +97,7 @@ class FitsDataset(Dataset):
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, str]:
         file_path = self.file_paths[index]
         with fits.open(file_path, memmap=self.memmap) as hdul:
-            data = hdul[self.hdu_index].data.astype(self.data_type)
+            data = hdul[self.hdu_index].data.astype(np.float32)
 
         if self.num_new_channels is not None:
             data = np.expand_dims(data, axis=0)  # Add channel dimension
