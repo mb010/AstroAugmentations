@@ -5,14 +5,14 @@ __all__ = ["MinMaxNormalize", "ToGray", "BrightnessGradient", "NaivePNGnorm"]
 
 
 class NaivePNGnorm:
-    def __init__(self, data_type) -> None:
-        self.data_type = data_type
+    def __init__(self) -> None:
+        pass
 
     def __call__(self, image, **kwargs):
         image = np.where(image >= 0, image, 0)
         image = image / np.amax(image)
         image = image * 255
-        return image.astype(np.uint8).astype(self.data_type)
+        return image.astype(np.uint8)
 
 
 class MinMaxNormalize:
