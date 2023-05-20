@@ -1,6 +1,7 @@
 from typing import Any
 import numpy as np
 import albumentations as A
+import torch
 
 __all__ = ["MinMaxNormalize", "ToGray", "BrightnessGradient", "NaivePNGnorm"]
 
