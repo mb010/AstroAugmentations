@@ -1,7 +1,16 @@
+from typing import Any
 import numpy as np
 import albumentations as A
 
 __all__ = ["MinMaxNormalize", "ToGray", "BrightnessGradient", "NaivePNGnorm"]
+
+
+class ToTensor:
+    def __init__(self, dtype=torch.float32) -> None:
+        self.dtype = dtype
+
+    def __call__(self, image, **kwds) -> Any:
+        return torch.from_numpy(image).type(self.dtype)
 
 
 class NaivePNGnorm:
