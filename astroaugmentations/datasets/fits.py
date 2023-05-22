@@ -5,7 +5,7 @@ from astropy.io import fits
 from pathlib import Path
 import numpy as np
 from torchvision.transforms import RandomCrop
-
+import albumentations as A
 
 import torch
 from torch.utils.data import Dataset
