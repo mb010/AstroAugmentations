@@ -151,7 +151,9 @@ class UVAugmentation:
 
     def __call__(self, image, **kwargs) -> Any:
         image = np.nan_to_num(image, nan=0)
-        uv = np.fft.fft2(image / np.max(np.abs(image)))
+        max_ = np.max(np.abs(image))
+        max_ = max_ if max_ != 0 else 1
+        uv = np.fft.fft2(image / max_)
         uv = self.transform(image=uv)["image"]
         if not self.fft:
             uv = np.real(np.fft.ifft2(uv))
