@@ -108,7 +108,7 @@ class FitsDataset(Dataset):
 
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, str]:
         if self.pre_load:
-            image = images[index]
+            image = self.images[index]
         else:
             file_path = self.file_paths[index]
             with fits.open(file_path, memmap=self.memmap) as hdul:
