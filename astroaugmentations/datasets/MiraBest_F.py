@@ -114,7 +114,7 @@ class MiraBest_FITS(data.Dataset):
 
     def _load_images(self):
         images = []
-        for idx in self.df.shape[0]:
+        for idx in range(self.__len__):
             with fits.open(
                 self.df.iloc[index]["file_path"], memmap=self.memmap
             ) as hdul:
