@@ -54,7 +54,7 @@ class MiraBest_FITS(data.Dataset):
             self.images = self._load_images()
 
     def _sample(self):
-        stratify = self.tragets if self.stratified else None
+        stratify = self.targets if self.stratified else None
         (
             train_data_indicies,
             test_data_indicies,
