@@ -31,6 +31,7 @@ class MiraBest_FITS(data.Dataset):
         stratified=True,
         seed=42,
         data_type=torch.float32,
+        pre_load=True,
     ) -> None:
         super().__init__()
         if download:
