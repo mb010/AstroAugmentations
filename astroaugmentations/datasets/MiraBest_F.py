@@ -38,6 +38,7 @@ class MiraBest_FITS(data.Dataset):
         self.root = root.rstrip("/")
         self.train = train
         self.seed = seed
+        self.stratified = stratified
         self.target_transform = target_transform
         self.test_size = test_size
         self.aug_type = aug_type
@@ -48,8 +49,12 @@ class MiraBest_FITS(data.Dataset):
         self.targets = self._get_targets()
         self._sample()
         self.data_type = data_type
+        self.pre_load = pre_load
+        if self.pre_load:
+            self.images = self._load_images()
 
     def _sample(self):
+        stratify = self.tragets if self.stratified else None
         (
             train_data_indicies,
             test_data_indicies,
@@ -60,6 +65,7 @@ class MiraBest_FITS(data.Dataset):
             self.targets,
             test_size=self.test_size,
             random_state=self.seed,
+            stratify=stratify,
         )
         if self.train:
             self.df = self.df.iloc[train_data_indicies]
@@ -105,9 +111,24 @@ class MiraBest_FITS(data.Dataset):
         targets = np.asarray(self.df["class"].values)
         return np.where(targets == "FR1", 0, 1)
 
+    def _load_images(self):
+        images = []
+        for idx in self.df.shape[0]:
+            with fits.open(
+                self.df.iloc[index]["file_path"], memmap=self.memmap
+            ) as hdul:
+                img = hdul[0].data.astype("float32")
+            images.append(img)
+        return images
+
     def __getitem__(self, index):
-        with fits.open(self.df.iloc[index]["file_path"], memmap=self.memmap) as hdul:
-            img = hdul[0].data.astype("float32")
+        if self.pre_load:
+            img = self.images[index]
+        else:
+            with fits.open(
+                self.df.iloc[index]["file_path"], memmap=self.memmap
+            ) as hdul:
+                img = hdul[0].data.astype("float32")
         target = self.targets[index]
 
         if self.aug_type == "albumentations":

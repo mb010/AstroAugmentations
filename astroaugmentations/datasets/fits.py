@@ -61,6 +61,7 @@ class FitsDataset(Dataset):
         test_fraction: float = 0.15,
         val_fraction: float = 0.15,
         memmap: bool = True,
+        pre_load: bool = False,
     ):
         self.hdu_index = hdu_index
         self.num_new_channels = num_new_channels
@@ -75,6 +76,9 @@ class FitsDataset(Dataset):
         # split according to stage
         self.file_paths = self._split_data(stage)
         self.memmap = memmap
+        self.pre_load = pre_load
+        if self.pre_load:
+            self.images = self._load_images()
 
     def _split_data(self, stage):
         # Stage must be one of ['fit', 'validate', 'test', 'predict']
@@ -94,10 +98,21 @@ class FitsDataset(Dataset):
         file_paths = list(root_path.glob("**/*.fits"))
         return file_paths
 
+    def _load_images(self) -> list:
+        images = []
+        for file in self.file_paths:
+            with fits.open(file, memmap=self.memmap) as hdul:
+                img = hdul[self.hdu_index].data.astype(np.float32)
+            images.append(img)
+        return images
+
     def __getitem__(self, index: int) -> Tuple[torch.Tensor, str]:
-        file_path = self.file_paths[index]
-        with fits.open(file_path, memmap=self.memmap) as hdul:
-            data = hdul[self.hdu_index].data.astype(np.float32)
+        if self.pre_load:
+            image = images[index]
+        else:
+            file_path = self.file_paths[index]
+            with fits.open(file_path, memmap=self.memmap) as hdul:
+                data = hdul[self.hdu_index].data.astype(np.float32)
 
         if self.num_new_channels is not None:
             data = np.expand_dims(data, axis=0)  # Add channel dimension
