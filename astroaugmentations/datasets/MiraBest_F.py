@@ -31,6 +31,7 @@ class MiraBest_FITS(data.Dataset):
         stratified=True,
         seed=42,
         data_type=torch.float32,
+        pre_load=True,
     ) -> None:
         super().__init__()
         if download:
@@ -54,7 +55,7 @@ class MiraBest_FITS(data.Dataset):
             self.images = self._load_images()
 
     def _sample(self):
-        stratify = self.tragets if self.stratified else None
+        stratify = self.targets if self.stratified else None
         (
             train_data_indicies,
             test_data_indicies,
@@ -113,10 +114,8 @@ class MiraBest_FITS(data.Dataset):
 
     def _load_images(self):
         images = []
-        for idx in self.df.shape[0]:
-            with fits.open(
-                self.df.iloc[index]["file_path"], memmap=self.memmap
-            ) as hdul:
+        for idx in range(self.__len__()):
+            with fits.open(self.df.iloc[idx]["file_path"], memmap=self.memmap) as hdul:
                 img = hdul[0].data.astype("float32")
             images.append(img)
         return images
