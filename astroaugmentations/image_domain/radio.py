@@ -344,6 +344,8 @@ class CustomKernelConvolution:
             covolved_image = (np.abs(convolved_image) + image) / 2
         return convolved_image
 
+        return convolved_image.astype(np.float32)
+
     def beam_cutting(self, kernel):
         kernel = np.where(
             np.abs(kernel) / np.abs(kernel).max() > self.beam_cut, 0, kernel
