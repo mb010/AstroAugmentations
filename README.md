@@ -105,7 +105,16 @@ AstroAugmentations
 ```
 
 # Citation
-Relevant publication in prep. Please reach out to the author for updates.
+```
+@software{Bowles_AstroAugmentations_2023,
+  author = {Bowles, Micah},
+  month = jun,
+  title = {{AstroAugmentations}},
+  url = {https://github.com/mb010/AstroAugmentations},
+  version = {0.1.0},
+  year = {2023}
+}
+```
 
 # Contact
 For questions please contact: micah.bowles@postgrad.manchester.ac.uk \
